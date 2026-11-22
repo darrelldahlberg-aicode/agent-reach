@@ -61,7 +61,7 @@ def research(role: str, platform: str, query: str, *, timeout: int = 35) -> dict
         return {"ok": False, "error": {"message": "Invalid query"}, "findings": []}
     response = _run([platform, "search", query.strip(), "--backend", "public-web"], timeout)
     if not response["ok"]:
-        return {"**": "unused"} if False else {"ok": False, "error": response["error"], "findings": []}
+        return {"ok": False, "error": response["error"], "findings": []}
     raw = response.get("items", [])
     if not isinstance(raw, list):
         raw = response.get("result", {}).get("items", []) if isinstance(response.get("result"), dict) else []
