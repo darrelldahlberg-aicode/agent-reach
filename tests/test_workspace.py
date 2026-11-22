@@ -64,3 +64,18 @@ def test_native_envelope_text_is_preserved():
 def test_no_source_does_not_create_finding():
     with patch("agent_reach.workspace.subprocess.run", return_value=_result([{"title": "Missing URL"}])):
         assert jade("stores")["findings"] == []
+
+
+def test_runner_emits_json(capsys):
+    from agent_reach import workspace_runner
+    with patch("agent_reach.workspace_runner.research", return_value={"ok": True, "findings": []}):
+        code = workspace_runner.main(["jade", "web", "furniture stores"])
+    assert code == 0
+    assert json.loads(capsys.readouterr().out)["ok"]
+
+
+def test_runner_returns_failure(capsys):
+    from agent_reach import workspace_runner
+    with patch("agent_reach.workspace_runner.research", return_value={"ok": False, "findings": []}):
+        code = workspace_runner.main(["aaron", "web", "test"])
+    assert code == 1
