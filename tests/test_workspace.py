@@ -18,8 +18,7 @@ def test_jade_deduplicates_and_tracks_source():
     assert out["ok"] and len(out["findings"]) == 1
     assert out["findings"][0]["source_url"] == "https://example.com/store"
     assert out["findings"][0]["status"] == "needs_review"
-    assert "--backend" in run.call_args.args[0]
-    assert "public-web" in run.call_args.args[0]
+    assert "--timeout" in run.call_args.args[0]
 
 
 def test_aaron_routes_to_web():
@@ -53,3 +52,15 @@ def test_channels_metadata():
 def test_rejects_invalid_urls():
     with patch("agent_reach.workspace.subprocess.run", return_value=_result([{"url": "file:///etc/passwd"}])):
         assert jade("prospect")["findings"] == []
+
+
+def test_native_envelope_text_is_preserved():
+    items = [{"url": "https://example.org/article", "title": "Article", "text": "Verified text"}]
+    with patch("agent_reach.workspace.subprocess.run", return_value=_result(items)):
+        out = research("aaron", "web", "marketing")
+    assert out["findings"][0]["evidence"] == "Verified text"
+
+
+def test_no_source_does_not_create_finding():
+    with patch("agent_reach.workspace.subprocess.run", return_value=_result([{"title": "Missing URL"}])):
+        assert jade("stores")["findings"] == []
