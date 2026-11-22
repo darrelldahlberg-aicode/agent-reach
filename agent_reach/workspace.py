@@ -59,12 +59,12 @@ def research(role: str, platform: str, query: str, *, timeout: int = 35) -> dict
         return {"ok": False, "error": {"message": "Role or platform not allowed"}, "findings": []}
     if not isinstance(query, str) or not query.strip() or len(query) > 500:
         return {"ok": False, "error": {"message": "Invalid query"}, "findings": []}
-    response = _run([platform, "search", query.strip(), "--backend", "public-web"], timeout)
+    response = _run([platform, "search", query.strip(), "--timeout", str(timeout)], timeout + 5)
     if not response["ok"]:
         return {"ok": False, "error": response["error"], "findings": []}
     raw = response.get("items", [])
     if not isinstance(raw, list):
-        raw = response.get("result", {}).get("items", []) if isinstance(response.get("result"), dict) else []
+        raw = []
     findings = []
     seen = set()
     for item in raw if isinstance(raw, list) else []:
@@ -74,7 +74,7 @@ def research(role: str, platform: str, query: str, *, timeout: int = 35) -> dict
         if not url or url in seen:
             continue
         seen.add(url)
-        excerpt = str(item.get("description") or item.get("snippet") or item.get("text") or "")
+        excerpt = str(item.get("text") or item.get("description") or item.get("snippet") or "")
         findings.append({
             "query": query, "platform": platform, "source_url": url,
             "title": str(item.get("title") or ""), "author": str(item.get("author") or ""),
